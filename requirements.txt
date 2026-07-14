@@ -1,5 +1,6 @@
-streamlit>=1.30
-playwright>=1.40
-beautifulsoup4>=4.12
-requests>=2.31
-ddgs>=9.0
+streamlit
+playwright
+beautifulsoup4
+requests
+ddgs
+lxml
