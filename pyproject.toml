@@ -5,9 +5,10 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "beautifulsoup4>=4.15.0",
-    "ddgs>=9.14.4",
-    "playwright>=1.61.0",
-    "requests>=2.34.2",
-    "streamlit>=1.59.2",
+    "beautifulsoup4",
+    "ddgs",
+    "playwright",
+    "requests",
+    "streamlit",
+    "lxml",
 ]
