@@ -54,13 +54,22 @@ async def _scan_with_playwright(url: str, timeout_ms: int = 30000) -> ScanResult
     Intercepts all network requests, checks for rlcdn.com calls,
     inspects cookies, and scans page content for RampID identifiers.
     """
-    from playwright.async_api import async_playwright
+    try:
+        from playwright.async_api import async_playwright
+    except ImportError:
+        result = ScanResult(url=url, scan_mode="playwright")
+        result.error = "Playwright is not installed. Use 'requests' mode instead."
+        return result
 
     result = ScanResult(url=url, scan_mode="playwright")
 
     try:
         async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=True)
+            try:
+                browser = await p.chromium.launch(headless=True)
+            except Exception as e:
+                result.error = f"Could not launch browser: {e}. Try 'requests' mode or run: playwright install chromium"
+                return result
             context = await browser.new_context(
                 user_agent=(
                     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
