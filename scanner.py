@@ -14,9 +14,6 @@ import asyncio
 import re
 from typing import Optional
 
-import requests
-from bs4 import BeautifulSoup
-
 from patterns import (
     ScanResult,
     RampIDMatch,
@@ -191,6 +188,9 @@ def scan_with_requests(url: str, timeout: int = 15) -> ScanResult:
     result = ScanResult(url=url, scan_mode="requests")
 
     try:
+        import requests as req
+        from bs4 import BeautifulSoup
+
         headers = {
             "User-Agent": (
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -201,7 +201,7 @@ def scan_with_requests(url: str, timeout: int = 15) -> ScanResult:
             "Accept-Language": "en-US,en;q=0.9",
         }
 
-        response = requests.get(url, headers=headers, timeout=timeout, allow_redirects=True, verify=False)
+        response = req.get(url, headers=headers, timeout=timeout, allow_redirects=True, verify=False)
         html = response.text
 
         result.page_title = ""
@@ -273,9 +273,9 @@ def scan_with_requests(url: str, timeout: int = 15) -> ScanResult:
             elif is_liveramp_url(href):
                 result.liveramp_requests.append({"url": href, "method": "GET", "resource_type": "link"})
 
-    except requests.exceptions.Timeout:
+    except req.exceptions.Timeout:
         result.error = "Request timed out"
-    except requests.exceptions.ConnectionError as e:
+    except req.exceptions.ConnectionError as e:
         result.error = f"Connection error: {e}"
     except Exception as e:
         result.error = str(e)
