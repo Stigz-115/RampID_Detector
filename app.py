@@ -145,43 +145,8 @@ pre-sales scoping.
 
 
 # ---------------------------------------------------------------------------
-# Main content
+# Display helper functions (defined before tabs that use them)
 # ---------------------------------------------------------------------------
-
-st.markdown('<div class="main-header">🔍 RampID Detector</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-header">Detect LiveRamp / RampID usage on prospect websites</div>', unsafe_allow_html=True)
-
-tab_scan, tab_research, tab_combined = st.tabs(["🌐 Website Scanner", "🔎 Web Research", "🚀 Combined Scan"])
-
-
-# ---------------------------------------------------------------------------
-# Tab 1: Website Scanner
-# ---------------------------------------------------------------------------
-
-with tab_scan:
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        scan_url = st.text_input(
-            "Website URL",
-            placeholder="e.g., https://www.example.com",
-            key="scan_url_input",
-        )
-    with col2:
-        st.markdown("&nbsp;")
-        scan_btn = st.button("🔍 Scan Website", type="primary", use_container_width=True)
-
-    if scan_btn:
-        if not scan_url.strip():
-            st.warning("Please enter a website URL.")
-        else:
-            url = normalize_url(scan_url)
-            st.info(f"Scanning **{url}** using **{scan_mode}** mode...")
-
-            with st.spinner("Scanning website for RampID / LiveRamp signals..."):
-                result = scan_website(url, mode=scan_mode, timeout_ms=scan_timeout * 1000)
-
-            _display_scan_result(result)
-
 
 def _display_scan_result(result: ScanResult):
     """Render a ScanResult in the UI."""
@@ -300,37 +265,33 @@ def _display_scan_result(result: ScanResult):
                 "behind a consent layer that blocks tracking scripts without user interaction.")
 
 
-# ---------------------------------------------------------------------------
-# Tab 2: Web Research
-# ---------------------------------------------------------------------------
+def _display_search_result(index: int, result: SearchResult):
+    """Render a single SearchResult."""
+    score_pct = int(result.relevance_score * 100)
+    score_color = "#4caf50" if score_pct >= 50 else "#c98a00" if score_pct >= 30 else "#888"
 
-with tab_research:
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        company_name = st.text_input(
-            "Company Name",
-            placeholder="e.g., Acme Corp",
-            key="research_company_input",
+    indicators_html = ""
+    if result.indicators:
+        indicators_html = " ".join(
+            f'<span class="signal-badge signal-found">{ind}</span>'
+            for ind in result.indicators
         )
-    with col2:
-        st.markdown("&nbsp;")
-        research_btn = st.button("🔎 Research", type="primary", use_container_width=True, key="research_btn")
 
-    if research_btn:
-        if not company_name.strip():
-            st.warning("Please enter a company name.")
-        elif search_engine == "Google" and (not google_api_key or not google_cx_id):
-            st.warning("Google Custom Search requires both an API key and CX ID. Enter them in the sidebar or switch to DuckDuckGo.")
-        else:
-            st.info(f"Researching **{company_name}** via **{search_engine}**...")
-
-            with st.spinner("Searching the web for LiveRamp partnership evidence..."):
-                if search_engine == "DuckDuckGo":
-                    report = search_duckduckgo(company_name, max_results=max_results)
-                else:
-                    report = search_google(company_name, google_api_key, google_cx_id, max_results=max_results)
-
-            _display_research_report(report)
+    st.markdown(f"""
+    <div class="result-card">
+        <div style="display:flex;justify-content:space-between;align-items:start;">
+            <div style="flex:1;">
+                <strong>{index}. <a href="{result.url}" target="_blank" style="color:#4da6ff;text-decoration:none;">{result.title}</a></strong><br>
+                <span style="color:#888;font-size:0.8rem;">{result.url}</span>
+            </div>
+            <div style="text-align:right;min-width:60px;">
+                <span style="font-size:1.2rem;font-weight:700;color:{score_color};">{score_pct}%</span>
+            </div>
+        </div>
+        <p style="margin-top:0.5rem;color:#aaa;font-size:0.9rem;">{result.snippet}</p>
+        {f'<div style="margin-top:0.3rem;">{indicators_html}</div>' if indicators_html else ''}
+    </div>
+    """, unsafe_allow_html=True)
 
 
 def _display_research_report(report: ResearchReport):
@@ -366,33 +327,76 @@ def _display_research_report(report: ResearchReport):
                 _display_search_result(i, r)
 
 
-def _display_search_result(index: int, result: SearchResult):
-    """Render a single SearchResult."""
-    score_pct = int(result.relevance_score * 100)
-    score_color = "#4caf50" if score_pct >= 50 else "#c98a00" if score_pct >= 30 else "#888"
+# ---------------------------------------------------------------------------
+# Main content
+# ---------------------------------------------------------------------------
 
-    indicators_html = ""
-    if result.indicators:
-        indicators_html = " ".join(
-            f'<span class="signal-badge signal-found">{ind}</span>'
-            for ind in result.indicators
+st.markdown('<div class="main-header">🔍 RampID Detector</div>', unsafe_allow_html=True)
+st.markdown('<div class="sub-header">Detect LiveRamp / RampID usage on prospect websites</div>', unsafe_allow_html=True)
+
+tab_scan, tab_research, tab_combined = st.tabs(["🌐 Website Scanner", "🔎 Web Research", "🚀 Combined Scan"])
+
+
+# ---------------------------------------------------------------------------
+# Tab 1: Website Scanner
+# ---------------------------------------------------------------------------
+
+with tab_scan:
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        scan_url = st.text_input(
+            "Website URL",
+            placeholder="e.g., https://www.example.com",
+            key="scan_url_input",
         )
+    with col2:
+        st.markdown("&nbsp;")
+        scan_btn = st.button("🔍 Scan Website", type="primary", use_container_width=True)
 
-    st.markdown(f"""
-    <div class="result-card">
-        <div style="display:flex;justify-content:space-between;align-items:start;">
-            <div style="flex:1;">
-                <strong>{index}. <a href="{result.url}" target="_blank" style="color:#4da6ff;text-decoration:none;">{result.title}</a></strong><br>
-                <span style="color:#888;font-size:0.8rem;">{result.url}</span>
-            </div>
-            <div style="text-align:right;min-width:60px;">
-                <span style="font-size:1.2rem;font-weight:700;color:{score_color};">{score_pct}%</span>
-            </div>
-        </div>
-        <p style="margin-top:0.5rem;color:#aaa;font-size:0.9rem;">{result.snippet}</p>
-        {f'<div style="margin-top:0.3rem;">{indicators_html}</div>' if indicators_html else ''}
-    </div>
-    """, unsafe_allow_html=True)
+    if scan_btn:
+        if not scan_url.strip():
+            st.warning("Please enter a website URL.")
+        else:
+            url = normalize_url(scan_url)
+            st.info(f"Scanning **{url}** using **{scan_mode}** mode...")
+
+            with st.spinner("Scanning website for RampID / LiveRamp signals..."):
+                result = scan_website(url, mode=scan_mode, timeout_ms=scan_timeout * 1000)
+
+            _display_scan_result(result)
+
+
+# ---------------------------------------------------------------------------
+# Tab 2: Web Research
+# ---------------------------------------------------------------------------
+
+with tab_research:
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        company_name = st.text_input(
+            "Company Name",
+            placeholder="e.g., Acme Corp",
+            key="research_company_input",
+        )
+    with col2:
+        st.markdown("&nbsp;")
+        research_btn = st.button("🔎 Research", type="primary", use_container_width=True, key="research_btn")
+
+    if research_btn:
+        if not company_name.strip():
+            st.warning("Please enter a company name.")
+        elif search_engine == "Google" and (not google_api_key or not google_cx_id):
+            st.warning("Google Custom Search requires both an API key and CX ID. Enter them in the sidebar or switch to DuckDuckGo.")
+        else:
+            st.info(f"Researching **{company_name}** via **{search_engine}**...")
+
+            with st.spinner("Searching the web for LiveRamp partnership evidence..."):
+                if search_engine == "DuckDuckGo":
+                    report = search_duckduckgo(company_name, max_results=max_results)
+                else:
+                    report = search_google(company_name, google_api_key, google_cx_id, max_results=max_results)
+
+            _display_research_report(report)
 
 
 # ---------------------------------------------------------------------------

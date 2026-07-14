@@ -141,7 +141,7 @@ def search_duckduckgo(company: str, max_results: int = 20) -> ResearchReport:
 
     No API key required.
     """
-    from duckduckgo_search import DDGS
+    from ddgs import DDGS
 
     report = ResearchReport(company=company, search_engine="DuckDuckGo")
     all_results: dict[str, SearchResult] = {}  # URL -> result (dedupe)

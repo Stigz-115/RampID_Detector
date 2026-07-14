@@ -4,7 +4,7 @@
 
 export PATH="$HOME/.local/bin:$PATH"
 
-APP_PORT="${APP_PORT:-8501}"
+APP_PORT="${APP_PORT:-3000}"
 
 cd "$(dirname "$0")"
 
